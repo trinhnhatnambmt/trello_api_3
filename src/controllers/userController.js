@@ -1,6 +1,8 @@
 import { StatusCodes } from "http-status-codes";
+import { sampleSize } from "lodash";
 import ms from "ms";
 import { userService } from "~/services/userService";
+import ApiError from "~/utils/ApiError";
 
 const createNew = async (req, res, next) => {
     try {
@@ -51,8 +53,43 @@ const login = async (req, res, next) => {
     }
 };
 
+const logout = async (req, res, next) => {
+    try {
+        // Xóa cookie - đơn giản là làm ngược lại so với việc gán cookie ở hàm login
+        res.clearCookie("accessToken");
+        res.clearCookie("refreshToken");
+
+        res.status(StatusCodes.OK).json({ loggedOut: true });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const refreshToken = async (req, res, next) => {
+    try {
+        const result = await userService.refreshToken(
+            req.cookies?.refreshToken
+        );
+        res.cookie("accessToken", result.accessToken, {
+            httpOnly: true,
+            secure: true,
+            sameSize: "none",
+            maxAge: ms("14 days"),
+        });
+    } catch (error) {
+        next(
+            new ApiError(
+                StatusCodes.FORBIDDEN,
+                "Please sign in! (Error from refresh Token)"
+            )
+        );
+    }
+};
+
 export const userController = {
     createNew,
     verifyAccount,
     login,
+    logout,
+    refreshToken,
 };
