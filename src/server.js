@@ -12,13 +12,30 @@ import { API_v1 } from "./routes/v1";
 import { errorHandlingMiddleware } from "./middlewares/errorHandlingMiddleware";
 import cors from "cors";
 import { corsOptions } from "./config/cors";
-
-const app = express();
+import cookieParser from "cookie-parser";
 
 const START_SERVER = () => {
+    const app = express();
+
+    // Fix cái vụ Cache from disk của ExpressJS
+    app.use((req, res, next) => {
+        res.set("Cache-Control", "no-store");
+        next();
+    });
+
+    // Cấu hình Cookie parser
+    app.use(cookieParser());
+
+    // Enable req.body json data
     app.use(express.json());
+
+    // Xử lí CORS
     app.use(cors(corsOptions));
+
+    // User APIs V1
     app.use("/v1", API_v1);
+
+    // Middleware xử lí lỗi tập trung
     app.use(errorHandlingMiddleware);
 
     app.listen(env.APP_PORT, env.APP_HOST, () => {
