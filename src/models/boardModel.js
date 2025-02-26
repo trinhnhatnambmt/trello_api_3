@@ -50,12 +50,19 @@ const validateBeforeCreate = async (data) => {
     });
 };
 
-const createNew = async (data) => {
+const createNew = async (userId, data) => {
     try {
         const validData = await validateBeforeCreate(data);
+
+        const newBoardToAdd = {
+            ...validData,
+            ownerIds: [new ObjectId(userId)],
+        };
+
         const createdBoard = await GET_DB()
             .collection(BOARD_COLLECTION_NAME)
-            .insertOne(validData);
+            .insertOne(newBoardToAdd);
+
         return createdBoard;
     } catch (error) {
         throw new Error(error);
@@ -76,16 +83,33 @@ const findOneById = async (id) => {
 };
 
 // Query tổng hợp (aggregate) để lấy toàn bộ Columns và Cards thuộc về Board
-const getDetails = async (id) => {
+const getDetails = async (userId, boardId) => {
     try {
+        const queryConditions = [
+            { _id: new ObjectId(boardId) },
+
+            { _destroy: false },
+
+            {
+                $or: [
+                    {
+                        ownerIds: {
+                            $all: [new ObjectId(userId)],
+                        },
+                    },
+                    {
+                        memberIds: {
+                            $all: [new ObjectId(userId)],
+                        },
+                    },
+                ],
+            },
+        ];
         const result = await GET_DB()
             .collection(BOARD_COLLECTION_NAME)
             .aggregate([
                 {
-                    $match: {
-                        _id: new ObjectId(id),
-                        _destroy: false,
-                    },
+                    $match: { $and: queryConditions },
                 },
                 {
                     $lookup: {

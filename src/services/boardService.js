@@ -8,14 +8,14 @@ import ApiError from "~/utils/ApiError";
 import { DEFAULT_ITEMS_PER_PAGE, DEFAULT_PAGE } from "~/utils/constants";
 import { slugify } from "~/utils/formatters";
 
-const createNew = async (reqBody) => {
+const createNew = async (userId, reqBody) => {
     try {
         const newBoard = {
             ...reqBody,
             slug: slugify(reqBody.title),
         };
 
-        const createdBoard = await boardModel.createNew(newBoard);
+        const createdBoard = await boardModel.createNew(userId, newBoard);
 
         const getNewBoard = await boardModel.findOneById(
             createdBoard.insertedId
@@ -26,9 +26,9 @@ const createNew = async (reqBody) => {
     }
 };
 
-const getDetails = async (boardId) => {
+const getDetails = async (userId, boardId) => {
     try {
-        const board = await boardModel.getDetails(boardId);
+        const board = await boardModel.getDetails(userId, boardId);
         if (!board) {
             throw new ApiError(StatusCodes.NOT_FOUND, "Board not found");
         }

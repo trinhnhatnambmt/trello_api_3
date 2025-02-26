@@ -4,7 +4,8 @@ const { StatusCodes } = require("http-status-codes");
 
 const createNew = async (req, res, next) => {
     try {
-        const createdBoard = await boardService.createNew(req.body);
+        const userId = req.jwtDecoded._id;
+        const createdBoard = await boardService.createNew(userId, req.body);
 
         res.status(StatusCodes.CREATED).json(createdBoard);
     } catch (error) {
@@ -14,8 +15,9 @@ const createNew = async (req, res, next) => {
 
 const getDetails = async (req, res, next) => {
     try {
+        const userId = req.jwtDecoded._id;
         const boardId = req.params.id;
-        const board = await boardService.getDetails(boardId);
+        const board = await boardService.getDetails(userId, boardId);
 
         res.status(StatusCodes.OK).json(board);
     } catch (error) {
