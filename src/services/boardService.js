@@ -5,6 +5,7 @@ import { boardModel } from "~/models/boardModel";
 import { cardModel } from "~/models/cardModel";
 import { columnModel } from "~/models/columnModel";
 import ApiError from "~/utils/ApiError";
+import { DEFAULT_ITEMS_PER_PAGE, DEFAULT_PAGE } from "~/utils/constants";
 import { slugify } from "~/utils/formatters";
 
 const createNew = async (reqBody) => {
@@ -87,9 +88,27 @@ const moveCardToDifferentColumn = async (reqBody) => {
     }
 };
 
+const getBoards = async (userId, page, itemPerPage) => {
+    try {
+        // Nếu không tồn tại page hoặc  itemsPerPage từ phía FE thì phía BE sẽ cần phải luôn gán giá trị mặc định
+        if (!page) page = DEFAULT_PAGE;
+        if (!itemPerPage) itemPerPage = DEFAULT_ITEMS_PER_PAGE;
+
+        const results = await boardModel.getBoards(
+            userId,
+            parseInt(page, 10),
+            parseInt(itemPerPage, 10)
+        );
+        return results;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const boardService = {
     createNew,
     getDetails,
     update,
     moveCardToDifferentColumn,
+    getBoards,
 };
