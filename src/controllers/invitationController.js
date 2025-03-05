@@ -25,7 +25,26 @@ const getInvitations = async (req, res, next) => {
     }
 };
 
+const updateBoardInvitation = async (req, res, next) => {
+    try {
+        const userId = req.jwtDecoded._id;
+        // Mặc dù ở phía FE để là notificationId nhưng bản chất ở API này nó cx chính là invitationId
+        const { invitationId } = req.params;
+        const { status } = req.body;
+
+        const updatedInvitation = await invitationService.updateBoardInvitation(
+            userId,
+            invitationId,
+            status
+        );
+        res.status(StatusCodes.OK).json(updatedInvitation);
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const invitationController = {
     createNewBoardInvitation,
     getInvitations,
+    updateBoardInvitation,
 };

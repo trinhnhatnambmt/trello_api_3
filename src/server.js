@@ -14,6 +14,10 @@ import cors from "cors";
 import { corsOptions } from "./config/cors";
 import cookieParser from "cookie-parser";
 
+//https://socket.io/get-started/chat/#integrating-socketio
+import http from "http";
+import socketIo from "socket.io";
+
 const START_SERVER = () => {
     const app = express();
 
@@ -38,7 +42,19 @@ const START_SERVER = () => {
     // Middleware xử lí lỗi tập trung
     app.use(errorHandlingMiddleware);
 
-    app.listen(env.APP_PORT, env.APP_HOST, () => {
+    // Tạo một cái server mới bọc thằng app của express để làm real-time với socket.io
+    const server = http.createServer(app);
+    // Khởi tạo biến io với server và cors
+    const io = socketIo(server, { cors: corsOptions });
+    io.on("connection", (socket) => {
+        // Lắng nghe sự kiện mà client emit lên có tên là:
+        socket.on("FE_USER_INVITED_TO_BOARD", (invitation) => {
+            // Cách làm nhanh và đơn giản nhất: Emit gửi ngược lại một sự kiện về cho mọi client khác (ngoại trừ chính cái thằng gửi req lên), rồi để phía FE check
+            socket.broadcast.emit("BE_USER_INVITED_TO_BOARD", invitation);
+        });
+    });
+
+    server.listen(env.APP_PORT, env.APP_HOST, () => {
         // eslint-disable-next-line no-console
         console.log(
             `Hello Trinh Huy, I am running at ${env.APP_HOST}:${env.APP_PORT}`
